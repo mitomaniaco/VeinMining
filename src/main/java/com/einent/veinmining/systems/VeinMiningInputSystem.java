@@ -60,8 +60,15 @@ public class VeinMiningInputSystem extends EntityTickingSystem<EntityStore> {
 
         MovementStates states = moveComp.getMovementStates();
         boolean isPressed = "crouching".equalsIgnoreCase(activationMode) ? states.crouching : states.walking;
-
         InputState state = playerStates.computeIfAbsent(uuid, id -> new InputState());
+
+        // Agachado, o jogo nao mantem `walking` estavel (pisca a cada ~30-100ms com o jogador parado),
+        // entao suas bordas nao representam toques reais no ALT. Ignora o duplo toque nesse estado.
+        if (states.crouching && !"crouching".equalsIgnoreCase(activationMode)) {
+            state.wasPressed = true;
+            state.lastPressTime = 0;
+            return;
+        }
         long currentTime = System.currentTimeMillis();
 
         if (isPressed && !state.wasPressed) {
