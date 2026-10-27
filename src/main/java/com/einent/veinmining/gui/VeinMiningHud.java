@@ -10,13 +10,15 @@ public class VeinMiningHud extends CustomUIHud {
 
     private final String key = "EineNT_VeinMining_Hud";
     private String currentPattern = "freeform";
+    private String details = "";
 
     public VeinMiningHud(@Nonnull PlayerRef playerRef) {
         super(playerRef, "EineNT_VeinMining_Hud");
     }
 
-    public void updatePattern(String pattern) {
+    public void setState(String pattern, String details) {
         this.currentPattern = pattern;
+        this.details = details;
     }
 
     @Override
@@ -25,6 +27,7 @@ public class VeinMiningHud extends CustomUIHud {
         ui.set("#ModeLabel.Text", getDisplayName(currentPattern));
         String iconId = "#Icon" + getIconName(currentPattern);
         ui.set(iconId + ".Visible", true);
+        ui.set("#DetailsLabel.Text", details);
     }
 
     private String getDisplayName(String pattern) {

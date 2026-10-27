@@ -34,6 +34,7 @@ public class VeinMiningConfig {
     private boolean requireValidTool = true;
     private boolean instantBreak = false;
     private boolean enableQuickSwitch = true;
+    private boolean enablePreview = true;
     private String[] validTools = new String[] { "Pickaxe", "Hatchet", "Shovel", "Shears" };
 
     private final Map<String, GroupSettings> groups = new HashMap<>();
@@ -61,6 +62,7 @@ public class VeinMiningConfig {
             .append(new KeyedCodec<>("RequireValidTool", Codec.BOOLEAN), (c, v, i) -> c.requireValidTool = v, (c, i) -> c.requireValidTool).add()
             .append(new KeyedCodec<>("InstantBreak", Codec.BOOLEAN), (c, v, i) -> c.instantBreak = v, (c, i) -> c.instantBreak).add()
             .append(new KeyedCodec<>("EnableQuickSwitch", Codec.BOOLEAN), (c, v, i) -> c.enableQuickSwitch = v, (c, i) -> c.enableQuickSwitch).add()
+            .append(new KeyedCodec<>("EnablePreview", Codec.BOOLEAN), (c, v, i) -> c.enablePreview = v, (c, i) -> c.enablePreview).add()
             .append(new KeyedCodec<>("ValidTools", new ArrayCodec<>(Codec.STRING, String[]::new)), (c, v, i) -> c.validTools = v, (c, i) -> c.validTools).add()
             .append(new KeyedCodec<>("Groups", new ArrayCodec<>(GroupSettings.CODEC, GroupSettings[]::new)), (c, v, i) -> c.setGroupsFromArray(v), (c, i) -> c.getGroupsAsArray()).add()
             .append(new KeyedCodec<>("PlayerOverrides", new ArrayCodec<>(PlayerOverride.CODEC, PlayerOverride[]::new)), (c, v, i) -> c.setOverridesFromArray(v), (c, i) -> c.getOverridesAsArray()).add()
@@ -261,6 +263,7 @@ public class VeinMiningConfig {
     public List<String> getValidTools() { return Arrays.asList(validTools); }
     public boolean isInstantBreak() { return instantBreak; }
     public boolean isQuickSwitchEnabled() { return enableQuickSwitch; }
+    public boolean isPreviewEnabled() { return enablePreview; }
     public boolean isShowPatternsAboveLimit() { return showPatternsAboveLimit; }
     public boolean isMasterSoundEnabled() { return masterSoundEnabled; }
 

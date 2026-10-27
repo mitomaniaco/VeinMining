@@ -89,32 +89,22 @@ public class MiningManager {
         return BlockOperations.setBlock(cs, sectionRef, x, y, z, blockId, blockType, 0, 0, flags);
     }
 
-    public void performVeinMine(Player player, Ref<EntityStore> pRef, Vector3i startPos, String targetId, BlockType startBlockType, Store<EntityStore> store, String uuid, int effectiveLimit) {
+    /** Face do bloco {@code target} para a qual o jogador esta olhando (usada para orientar os padroes). */
+    public Vector3i getHitFace(Vector3i target, Store<EntityStore> store, Ref<EntityStore> ref) {
+        return patternCalculator.getHitFace(target, store, ref);
+    }
+
+    /**
+     * Blocos que o vein mining quebraria alem do bloco inicial, na ordem de quebra e ja limitados por {@code effectiveLimit}.
+     * Retorna {@code null} se o bloco alvo for barrado pela blacklist/whitelist. Nao considera durabilidade da ferramenta.
+     */
+    public List<Vector3i> selectBlocks(World world, Ref<EntityStore> pRef, Store<EntityStore> store, Vector3i startPos, String targetId, String uuid, boolean isAdmin, int effectiveLimit) {
         VeinMiningConfig cfg = config.get();
-        PlayerRef playerRef = store.getComponent(pRef, PlayerRef.getComponentType());
-        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
-
-        if (!cfg.isModEnabled(uuid, isAdmin)) return;
-
-        World world = player.getWorld();
-        InventoryComponent.Tool inv = store.getComponent(pRef, InventoryComponent.Tool.getComponentType());
-        ItemStack tool = InventoryComponent.getItemInHand(store, pRef);
-        if (tool == null || tool.isEmpty()) tool = null;
-        String toolId = (tool != null) ? tool.getItem().getId() : "";
-
-        if (cfg.isRequireValidTool()) {
-            if (tool == null) return;
-            boolean isValid = false;
-            for (String allowedTool : cfg.getValidTools()) {
-                if (toolId.contains(allowedTool)) { isValid = true; break; }
-            }
-            if (!isValid) return;
-        }
 
         List<String> blockBlacklist = cfg.getBlockBlacklist();
-        if (blockBlacklist.contains(targetId)) return;
+        if (blockBlacklist.contains(targetId)) return null;
         List<String> blockWhitelist = cfg.getBlockWhitelist();
-        if (!blockWhitelist.isEmpty() && !blockWhitelist.contains(targetId)) return;
+        if (!blockWhitelist.isEmpty() && !blockWhitelist.contains(targetId)) return null;
 
         String pattern = cfg.getValidatedPattern(uuid, null, isAdmin);
         String targetMode = cfg.getValidatedTargetMode(uuid, null, isAdmin);
@@ -151,6 +141,33 @@ public class MiningManager {
         if (blocksToBreak.size() > neighborsLimit) {
             blocksToBreak = blocksToBreak.subList(0, neighborsLimit);
         }
+        return blocksToBreak;
+    }
+
+    public void performVeinMine(Player player, Ref<EntityStore> pRef, Vector3i startPos, String targetId, BlockType startBlockType, Store<EntityStore> store, String uuid, int effectiveLimit) {
+        VeinMiningConfig cfg = config.get();
+        PlayerRef playerRef = store.getComponent(pRef, PlayerRef.getComponentType());
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
+
+        if (!cfg.isModEnabled(uuid, isAdmin)) return;
+
+        World world = player.getWorld();
+        InventoryComponent.Tool inv = store.getComponent(pRef, InventoryComponent.Tool.getComponentType());
+        ItemStack tool = InventoryComponent.getItemInHand(store, pRef);
+        if (tool == null || tool.isEmpty()) tool = null;
+        String toolId = (tool != null) ? tool.getItem().getId() : "";
+
+        if (cfg.isRequireValidTool()) {
+            if (tool == null) return;
+            boolean isValid = false;
+            for (String allowedTool : cfg.getValidTools()) {
+                if (toolId.contains(allowedTool)) { isValid = true; break; }
+            }
+            if (!isValid) return;
+        }
+
+        List<Vector3i> blocksToBreak = selectBlocks(world, pRef, store, startPos, targetId, uuid, isAdmin, effectiveLimit);
+        if (blocksToBreak == null) return;
 
         boolean isCreative = player.getGameMode() == GameMode.Creative;
         String dropMode = cfg.getDropMode();
